@@ -110,7 +110,7 @@ WHERE   salary = 24000;
 -- ======================================
 -- p.97 여러개의 조건식을 사용하는 AND, OR 연산자
 -- ======================================
--- AND : 조건식 모두 TRUE ==> 최정 TRUE (~~이면서)
+-- AND : 조건식 모두 TRUE ==> 최종 TRUE (~~이면서)
 -- OR : 조건식중 하나라도 TRUE ==> 최종 TRUE (~~이거나)
 
 --실습 5-3 AND 연산자로 30번 부서에 근무하면서 업무가 SALSAMAN인 사원을 조회하시오
@@ -144,7 +144,7 @@ WHERE   job_id = 'PU_CLERK'
 --OR      job_id = 'SH_CLERK'
 OR      department_id = 30;
 
---p.99 1분 복습, 부서 번호가 80 이거나 직업이 SA_MAN인 사원의 정보만 나오도록 조회
+--p.99 1분 복습, 부서 번호가 20 이거나 직업이 SA_MAN인 사원의 정보만 나오도록 조회
 SELECT *
 FROM    employees
 WHERE   department_id = 20

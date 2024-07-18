@@ -187,8 +187,31 @@ SELECT  e.employee_id, e.first_name, e.job_id, e.manager_id, e.hire_date, e.sala
 FROM    employees e FULL OUTER JOIN departments d -- 네추럴 조인 한다고 보여짐 vs    , : 콤마?
 USING   (department_id);
 
+--======================================================================
+--SQL-99(ANSI) 조인 방식에서 세개 이상의 테이블을 조인할 때
+--======================================================================
+-- 오라클 조인에서 세개 이상의 테이블 조인
+-- FROM employee e, departments d, loactions l
+-- 오라클 조인에서 세개 이상의 테이블 조인
+-- ANSI 조인에서는
+-- WHERE 조건절 : 테이블 갯수 - 1개 만큼 작성 필요
 
+--ANSI 조인에서는
+-- FROM employee e INNER JOIN departments d
+-- ON e.department_id - d.department_id INNER JOIN lacations sl
+-- ON d.lacotion_id = l.location_id INNER JOIN contries c
+-- ON .. 계속
 
+-- p.238 1분 복습. 사원 테이블과 부서 테이블의 조인해서 급여는 3000 이상, 직속상관이 있는 사원을 조회
+-- INNER JOIN vs NATURAL JOIN
+--                INNER JOIN의 하위 개념,
+--                  join이 되는 테이블의 데이터 도메인과 컬럼명 컬럼값이 동일해야 하는 제약조건(=강제사항)이 있다
+--                  ON 절이 없다 ==> USING 사용!
+SELECT  e.employee_id, e.first_name, e.salary, e.manager_id, d.department_name
+FROM    employees e INNER JOIN departments d
+USING     (department_id)
+WHERE   e.salary >= 3000
+ORDER BY 3;
 
 
 
