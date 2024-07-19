@@ -16,10 +16,11 @@ rollback;
 select numb from board;
 
 delete from board
-where name = '김현준';
+where numb=8;
+
 
 select * 
-from board 
+from board; 
 
 commit;
 
@@ -32,11 +33,21 @@ VALUES (3, '월출산', '2024-03-17', 'admin@gmail.com', '연말정산 제출', 
 INSERT INTO board 
 VALUES (4, '무등산', '2024-03-18', 'admin@gmail.com', '휴일 근무자 편성', '2024년 4월 휴일근무자 편성 안내', 4, 1234);
 
+INSERT INTO board 
+VALUES (seq_num.NEXTVAL, '백두산', '2024-03-18', 'admin@gmail.com', '휴일 근무자 편성', '2024년 4월 휴일근무자 편성 안내', 4, 1234);
+
+DROP SEQUENCE seq_num;
+
 
 CREATE SEQUENCE seq_num
   START WITH 5  -- 시작 값
-  INCREMENT BY 1  -- 증가 값
-  MINVALUE 1  -- 최소 값
-  MAXVALUE 99999999;  -- 최대 값
+  INCREMENT BY 1  -- 증가 값  
+  nocycle
+  nocache;
 
-
+create or replace TRIGGER trg_board
+  BEFORE INSERT ON board 
+  for each row
+BEGIN
+  select nvl(max(numb), 0)+1 into :new.numb from board;
+    END ;
