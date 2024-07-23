@@ -235,7 +235,7 @@ WHERE   first_name >= 'F';
 -- p.104 등가비교 연산자
 -- = : 같다
 -- !=, <>, ^= : 같지않다
-
+    
 
 SELECT *
 FROM    employees
