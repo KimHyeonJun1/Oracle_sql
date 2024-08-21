@@ -105,13 +105,113 @@ select * from product_code;
 update product_code set reg_date = '2019-10-31';
 commit;
 
+select distinct department_id, nvl(department_name, '소속없음') AS department_name
+from employees e left outer join departments d using(department_id)
+order by department_name;
+
+//내가 한것
+select e.last_name||' '||e.first_name as name, m.last_name||' '||m.first_name as manager_name, j.job_title, d.department_name, e.* 
+from employees e, departments d, jobs j, employees m
+where e.department_id = d.department_id
+and e.job_id = j.job_id
+and e.manager_id = m.employee_id
+and e.employee_id = 101;
+
+//오라클 조인
+select e.*, department_name, job_title, m.last_name||' '||m.first_name as manager_name, city
+from employees e, departments d, jobs j, employees m, locations l
+where e.employee_id = 178
+and e.department_id = d.department_id(+)
+and j.job_id = e.job_id
+and e.manager_id = m.employee_id(+)
+and d.location_id = l.location_id(+);
+
+//안시 조인
+select city, region_name, country_name, department_name, job_title,  m.last_name||' '||m.first_name as manager_name, city, country_name
+from employees e left outer join departments d on e.department_id = d.department_id
+inner join jobs j on j.job_id = e.job_id
+left outer join employees m on e.manager_id = m.employee_id
+left outer join locations l on d.location_id = l.location_id
+left outer join countries c on c.country_id = l.country_id
+left outer join regions r on r.region_id = c.region_id
+where e.employee_id = 201;
 
 
+select *
+from employees
+where employee_id = 101;
+
+alter trigger update_job_history disable;
+
+desc employees;
+
+select t.table_name, t.constraint_name, column_name, constraint_type
+from user_constraints t left outer join user_cons_columns c 
+on t.constraint_name = c.constraint_name
+where t.table_name in ('EMPLOYEES', 'DEPARTMENTS', 'JOB_HISTORY')
+order by 1;
+
+alter table job_history drop constraint jhist_emp_fk;
 
 
+select * from departments;
 
+alter table employees drop constraint emp_manager_fk;
+alter table employees add constraint emp_manager_fk foreign key(manager_id)
+                                                    references employees(employee_id) on delete set null;
 
+alter table departments drop constraint dept_mgr_fk;
+alter table departments add constraint dept_mgr_fk 
+                        foreign key(manager_id)  references employees(employee_id) on delete set null;
+                                                    
+-- 관리자인 102번                                                    
+select employee_id from employees where manager_id = 102;
+-- 103번의 관리자는 102번 = 102번이 관리하고 있는 사원 103번
+select employee_id, manager_id from employees where employee_id = 103;                                                     
 
+select count(*) from employees where manager_id = 120;
+
+select * from departments;
+
+select employees_seq.nextval from dual; //209
+
+create or replace trigger trg_employees
+    before insert on employees
+    for each row
+begin
+    select employees_seq.nextval into :new.employee_id from dual;
+end;
+/
+
+select * from employees;
+
+-- 회원관리
+create table member(
+name    varchar2(50) not null,
+userid  varchar2(50) constraint member_userid_pk primary key, 
+userpw  varchar2(300) not null, 
+gender  varchar2(3) default '남' not null, 
+email   varchar2(50) not null, 
+profile     varchar2(300), /*프로필이미지*/
+birth       date, 
+phone       varchar2(13), 
+post        varchar2(5),
+address1    varchar2(300), 
+address2    varchar2(100),
+social      varchar2(1) /* 소셜: N/K(네이버/카카오)*/
+);
+
+-- 소셜로그인에 따른 제약조건변경
+alter table member modify(userpw null, email null);
+
+--소셜로그인에 따른 소셜종류 관리 컬럼 추가
+alter table member add( social   varchar2(1) );
+
+update member set email ='6389301@naver.com';
+commit;
+
+select * from member; 
+--where userid= 'hong' and userpw= '1234';
 
 
 
