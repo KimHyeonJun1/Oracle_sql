@@ -21,6 +21,10 @@ commit;
 insert into notice (title, content, writer)
 values ('두번째 테스트 공지글', '두번째 테스트 공지글 입니다.', 'manager' );
 
+insert into notice (title, content, writer)
+values ('두번째 테스트 공지글', '두번째 테스트 공지글 입니다.', 'manager' );
+
+
 create or replace trigger trg_notice
     before insert on notice
     for each row
@@ -29,4 +33,18 @@ begin
 end;
 /
 
-select * from notice;
+select id, filename, filepath from notice order by id desc;
+
+select name, userid from member;
+
+
+select * from
+(select row_number() over(order by id) no, name, n.*
+from notice n left outer join member m on m.userid = n.writer) n
+where no    between 375 and 384
+order by no desc;
+
+insert into notice ( title, content, writer)
+select title, content, writer from notice;
+
+commit;
