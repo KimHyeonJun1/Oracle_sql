@@ -74,3 +74,95 @@ insert into notice ( title, content, writer)
 select title, content, writer from notice;
 
 commit;
+
+//새로운 테이블 로그인정보 저장하기 위한
+create table remember(
+    username varchar(64) not null, /*userid*/
+    series varchar(64) constraint remember_pk primary key, /* 식별자*/
+    token varchar(64) not null, /*쿠키에 사용할 토큰*/
+    last_used timestamp not null /*최종 사용일시*/
+);
+
+select * from remember;
+
+delete from remember where username ='admin'
+
+drop table board;
+//방명록을 관리할 테이블
+
+create table board (
+id          number constraint board_id_pk primary key,
+title       varchar2(300) not null,
+content     varchar2(4000) not null,
+writer      varchar2(50) not null constraint board_wrtier_fk references member(userid) on delete cascade,
+writedate date default sysdate not null,
+readcnt     number default 0
+);
+
+create sequence seq_board start with 1 increment by 1 nocache;
+
+create or replace trigger trg_board 
+    before insert on board
+    for each row
+begin
+    select seq_board.nextval into :new.id from dual;
+end;
+/
+
+insert into board(id, title, content, writer)
+values (seq_board.nextval, '테스트 방명록글1', '방명록글 테스트', 'test123');
+insert into board(title, content, writer)
+values ('테스트 방명록글2', '방명록글 테스트', 'test123');
+
+commit;
+select * from board;
+
+--방명록 첨부파일 관리할 테이블 만들기
+create table board_file (
+id              number constraint board_file_id_pk primary key,
+filename        varchar2(300) not null,
+filepath        varchar2(300) not null,
+board_id        number not null constraint board_file_fk references board(id) on delete cascade
+);
+
+create sequence seq_board_file start with 1 increment by 1 nocache;
+
+create or replace trigger trg_board_file
+    before insert on board_file
+    for each row
+begin
+    select seq_board_file.nextval into :new.id from dual;
+end;
+/
+
+insert into board (title, content, writer)
+select title, content, writer from board;
+
+commit;
+
+select *
+from	(select row_number() over(order by id) no, name, b.*
+		from board b inner join member on writer = userid ) 
+--where no between #{beginList} and #{endList}		
+order by id desc;
+
+select * from board_file;
+
+
+select * from board;
+
+select userid from member;
+
+
+create or replace function fn_boardFileCount( b_id number )
+return number is
+ cnt    number;
+begin
+    select count(*) into cnt from board_file where board_id = b_id;
+return cnt;
+end;
+/
+
+commit;
+
+select fn_boardFileCount(393) from dual;
