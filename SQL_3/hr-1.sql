@@ -146,6 +146,13 @@ from	(select row_number() over(order by id) no, name, b.*
 --where no between #{beginList} and #{endList}		
 order by id desc;
 
+select * from board where id = 387;
+
+select name, b.*, f.id file_id, filename, filepath 
+from board b inner join member m on writer = userid
+left outer join board_file f on b.id = f.board_id
+where b.id = 390;
+
 select * from board_file;
 
 
