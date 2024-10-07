@@ -173,3 +173,184 @@ end;
 commit;
 
 select fn_boardFileCount(393) from dual;
+
+-- 방명록 댓글관리
+create table board_comment (
+id            number constraint board_comment_id_pk primary key,
+content       varchar2(4000) not null,
+writer        varchar2(50) constraint board_comment_writer_fk 
+                           references member(userid) on delete cascade,
+writedate     date default sysdate,
+board_id      number constraint board_comment_id_fk 
+                            references board(id) on delete cascade,
+notify        number default 0 /*0:미확인, 1:확인*/                            
+);
+
+create sequence seq_board_comment start with 1 increment by 1 nocache;
+
+create or replace trigger trg_board_comment
+    before insert on board_comment
+    for each row
+begin
+    select seq_board_comment.nextval into :new.id from dual;
+end;
+/
+
+
+commit;
+
+
+alter table board_comment add (notify        number default 0);
+
+desc board_comment;
+select id, board_id, notify from board_comment;
+
+--댓글 누가썻는지 조회
+select writer from board
+where id in (select board_id from board_comment);
+
+select userid, name from member;
+
+--댓글 여러개로 만들기
+insert into board_comment (content,writer,board_id)
+select content,writer,board_id from board_comment;
+commit;
+
+select userid, name from member;
+
+--부서별 사원수 조회
+select department_id, count(employee_id) count, nvl(department_name, '소속없음') department_name
+from employees e left outer join departments d using(department_id)
+group by department_id, department_name;
+
+
+--년도별 채용인원수 조회
+--2020년 10명
+--2021년 5명
+select to_char(hire_date, 'yyyy') unit, count(employee_id) count
+from employees
+group by to_char(hire_date, 'yyyy')
+order by unit
+;
+
+select to_char(hire_date, 'mm') unit, count(employee_id) count
+from employees
+group by to_char(hire_date, 'mm')
+order by unit;
+
+
+--부서원수 상위3위까지의 부서
+--dense_rank 써서 1,2,333,6이아니라 1,2,333,4,5이런식으로 표현
+select rank, department_id, '(TOP' || rank || ')' || department_name department_name
+from (select dense_rank() over(order by count(*) desc ) rank, department_id
+        from employees
+        group by department_id) e left outer join departments d using(department_id)
+where rank <=3 
+;
+
+--상위3위까지의 부서의 월별 채용인원수 
+select to_char(hire_date, 'mm') unit, count(*) count
+from employees
+group by to_char(hire_date, 'mm');
+
+select department_name, to_char(hire_date, 'mm') unit
+from employees e inner join
+        (select rank, department_id, '(TOP' || rank || ')' || department_name department_name
+        from (select dense_rank() over(order by count(*) desc ) rank, department_id
+                from employees
+                group by department_id) e left outer join departments d using(department_id)
+        where rank <=3 ) r using(department_id)
+order by 1, 2       
+;
+
+--상위3위까지의 부서의 월별 채용인원수 가로행으로
+
+select department_name, extract(month from hire_date) unit
+from employees e inner join
+        (select rank, department_id, '(TOP' || rank || ')' || department_name department_name
+        from (select dense_rank() over(order by count(*) desc ) rank, department_id
+                from employees
+                group by department_id) e left outer join departments d using(department_id)
+        where rank <=3 ) r using(department_id)
+order by 1, 2       
+;
+
+select *
+from (select department_name, extract(month from hire_date) unit
+        from employees e inner join
+                (select rank, nvl(e.department_id, 0) department_id, '(TOP' || rank || ')' || nvl(department_name, '소속 없음') department_name
+                from (select dense_rank() over(order by count(*) desc ) rank, department_id
+                        from employees
+                        group by department_id) e left outer join departments d on nvl(e.department_id, 0)=d.department_id
+                where rank <=3 ) r on nvl(e.department_id, 0)=r.department_id)
+pivot( count(unit) for unit in (1,2,3,4,5,6,7,8,9,10,11,12) )
+order by department_name
+;
+
+
+--년도별
+select *
+from (select department_name, extract(year from hire_date) unit
+        from employees e inner join
+                (select rank, nvl(e.department_id, 0) department_id, '(TOP' || rank || ')' || nvl(department_name, '소속 없음') department_name
+                from (select dense_rank() over(order by count(*) desc ) rank, department_id
+                        from employees
+                        group by department_id) e left outer join departments d on nvl(e.department_id, 0)=d.department_id
+                where rank <=3 ) r on nvl(e.department_id, 0)=r.department_id)
+pivot( count(unit) for unit in (2002,2003,2004,2005,2006,2007,2008,2024) )
+order by department_name
+;
+
+
+
+--세로행을 가로행으로 : pivot
+--가로행을 세로행으로 : unpivot
+
+--각 사원의 부서코드 조회
+select nvl(department_id, 0) department_id from employees
+order by 1;
+
+select *
+from (select nvl(department_id, 0) department_id from employees)
+pivot( count(department_id) for department_id in(0,10,20,30,40,50,60,70,80,90,100,110) )
+;
+
+--각 부서별 사원수 조회
+select nvl(department_id, 0) department_id, count(employee_id) count
+from employees
+group by department_id
+order by 1;
+
+--pivot하기(가로행으로 만들기)
+select *
+from (select nvl(department_id, 0) department_id, count(employee_id) count
+        from employees
+        group by department_id)
+pivot (sum (count) for department_id in (0,10,20,30,40,50,60,70,80,90,100,110) )        
+;        
+
+--사월들의 입사월 조회
+select to_char(hire_date, 'mm'), extract(month from hire_date) mm from employees
+order by 1;
+--pivot하기(가로행으로 만들기)
+select * 
+from (select to_char(hire_date, 'mm') mm from employees)
+pivot(count(mm) for mm in ('01','02','03','04','05','06','07','08','09','10','11','12'))
+;
+select *
+from ( select extract(month from hire_date) mm from employees)
+pivot (count(mm) for mm in ('01','02','03','04','05','06','07','08','09','10','11','12'));
+
+--입사월별 사원수 조회
+select to_char(hire_date, 'mm'), count(employee_id) from employees
+group by to_char(hire_date, 'mm')
+;
+
+--pivot하기
+select *
+from (select to_char(hire_date, 'mm') mm , count(employee_id) count from employees
+        group by to_char(hire_date, 'mm'))
+pivot(sum (count) for mm in ('01','02','03','04','05','06','07','08','09','10','11','12') )
+;
+        
+        
