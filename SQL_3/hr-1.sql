@@ -24,6 +24,8 @@ indent      number default 0,  /* 들여쓰기 */
 constraint notice_rid_fk foreign key(rid) references notice(id) on delete cascade
 );
 
+select userid from member;
+
 select id, rid, root, step, indent from notice order by id desc;
 
 update notice set root = id;
@@ -185,6 +187,23 @@ board_id      number constraint board_comment_id_fk
                             references board(id) on delete cascade,
 notify        number default 0 /*0:미확인, 1:확인*/                            
 );
+
+-- 미확인 댓글알림처리
+select notifycnt, fn_boardFileCount(b.id) filecnt, b.*
+from ( select row_number() over(order by id) no, name, b.* 
+	   from board b inner join member on writer = userid
+        ) b left outer join ( select board_id, count(case when notify=0 then 0 end) notifycnt from board_comment 
+              group by board_id ) c on b.id = c.board_id
+order by id desc
+;
+
+-- 미확인 댓글 목록 조회
+select  *
+from    board_comment
+where   notify = 0 and board_id in ( select id from board where writer = 'user0001' )
+order by    writedate desc
+;
+
 
 create sequence seq_board_comment start with 1 increment by 1 nocache;
 
@@ -352,5 +371,10 @@ from (select to_char(hire_date, 'mm') mm , count(employee_id) count from employe
         group by to_char(hire_date, 'mm'))
 pivot(sum (count) for mm in ('01','02','03','04','05','06','07','08','09','10','11','12') )
 ;
-        
+
+select userid from member;
+
+select count(case when notify=0 then 0 end) notifycnt
+from board_comment
+where board_id = 379;        
         

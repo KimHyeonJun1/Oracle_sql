@@ -192,20 +192,19 @@ userid  varchar2(50) constraint member_userid_pk primary key,
 userpw  varchar2(300) not null, 
 gender  varchar2(3) default '남' not null, 
 email   varchar2(50) not null, 
-profile     varchar2(300), /*프로필이미지*/
-birth       date, 
-phone       varchar2(13), 
+profile     varchar2(300),              /*프로필이미지*/
+birth       date,
+phone       varchar2(13),
 post        varchar2(5),
-address1    varchar2(300), 
+address1    varchar2(300),
 address2    varchar2(100),
-social      varchar2(1) /* 소셜: N/K(네이버/카카오) */
+social      varchar2(1),                 /* 소셜: N/K(네이버/카카오) */
 role        varchar2(10) default 'USER' /* 관리자여부: USER/ADMIN */
 );
 
 slect * from member where role = 'ADMIN';
 
 select userid, profile from member;
-
 
 
 -- 관리자여부를 관리할 컬럼 추가
