@@ -204,6 +204,7 @@ where   notify = 0 and board_id in ( select id from board where writer = 'user00
 order by    writedate desc
 ;
 
+select name, userid from member;
 
 create sequence seq_board_comment start with 1 increment by 1 nocache;
 
